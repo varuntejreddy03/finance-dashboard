@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useApp } from './context/AppContext';
 import Sidebar from './components/Sidebar';
 
 // Lazy load pages for code splitting
@@ -20,25 +20,37 @@ function PageLoader() {
   );
 }
 
+function AppLayout() {
+  const { sidebarCollapsed } = useApp();
+
+  return (
+    <div className="flex min-h-screen bg-surface-50 dark:bg-surface-900 transition-colors duration-300">
+      <Sidebar />
+      <main
+        className={`flex-1 mt-16 lg:mt-0 overflow-x-hidden transition-[margin-left] duration-300 ${
+          sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-72'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/transactions" element={<TransactionsPage />} />
+              <Route path="/insights" element={<InsightsPage />} />
+              <Route path="/architecture" element={<ArchitecturePage />} />
+            </Routes>
+          </Suspense>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <AppProvider>
       <BrowserRouter>
-        <div className="flex min-h-screen bg-surface-50 dark:bg-surface-900 transition-colors duration-300">
-          <Sidebar />
-          <main className="flex-1 lg:ml-72 mt-16 lg:mt-0 overflow-x-hidden">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/" element={<DashboardPage />} />
-                  <Route path="/transactions" element={<TransactionsPage />} />
-                  <Route path="/insights" element={<InsightsPage />} />
-                  <Route path="/architecture" element={<ArchitecturePage />} />
-                </Routes>
-              </Suspense>
-            </div>
-          </main>
-        </div>
+        <AppLayout />
       </BrowserRouter>
     </AppProvider>
   );

@@ -7,51 +7,36 @@ import {
 import { buildIndex, runBenchmark } from '../utils/dataEngine';
 import { useApp } from '../context/AppContext';
 
-// ─── Section 1: Interactive HLD ───────────────────────────────
+// ─── Section 1: How the App is Built ──────────────────────────
 
-interface HldNode {
-  id: string;
-  label: string;
-  icon: typeof Cpu;
-  color: string;
-  items: string[];
-}
-
-const hldNodes: HldNode[] = [
+const hldNodes = [
   {
     id: 'ui',
     label: 'UI Layer',
     icon: Layout,
     color: '#818CF8',
-    items: ['DashboardPage', 'TransactionsPage', 'InsightsPage', 'ArchitecturePage', 'Sidebar', 'SummaryCards', 'Charts'],
+    items: ['Dashboard Page', 'Transactions Page', 'Insights Page', 'Sidebar & Navigation', 'Charts (Recharts)'],
   },
   {
     id: 'state',
-    label: 'State Layer',
+    label: 'State Management',
     icon: Layers,
     color: '#34D399',
-    items: ['AppContext (role, theme, filters)', 'useFilteredTransactions()', 'useFinanceSummary()', 'localStorage persistence'],
+    items: ['React Context API', 'Theme & Role state', 'Filter & Search state', 'localStorage sync'],
   },
   {
     id: 'engine',
-    label: 'Data Engine',
+    label: 'Data Processing',
     icon: Cpu,
     color: '#F59E0B',
-    items: ['buildIndex() — HashMap construction', 'getDateRange() — binary search', 'byId, byCategory, byType indexes', 'Pre-sorted views (date, amount)'],
+    items: ['Indexed data lookups', 'Category grouping', 'Date range filtering', 'Pre-sorted views'],
   },
   {
     id: 'data',
-    label: 'Mock API / Cache',
+    label: 'Data Source',
     icon: Database,
     color: '#EC4899',
-    items: ['30 mock transactions', 'localStorage cache', 'Category metadata', 'Future: REST / GraphQL endpoint'],
-  },
-  {
-    id: 'worker',
-    label: 'Web Worker',
-    icon: Server,
-    color: '#06B6D4',
-    items: ['Offload aggregation', 'Monthly totals', 'Trend detection', 'Keeps main thread at 60fps'],
+    items: ['30 mock transactions', 'localStorage persistence', 'Category metadata'],
   },
 ];
 
@@ -60,86 +45,74 @@ function HldDiagram() {
 
   return (
     <div className="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700 shadow-sm">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-500/15 flex items-center justify-center">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
           <GitBranch size={20} className="text-primary-500" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-surface-900 dark:text-white">System Architecture (HLD)</h3>
-          <p className="text-sm text-surface-500">Click any layer to explore its internals</p>
+          <h3 className="text-lg font-bold text-surface-900 dark:text-white">How the App is Structured</h3>
+          <p className="text-sm text-surface-500 dark:text-surface-400">Click a layer to see what's inside</p>
         </div>
       </div>
 
-      {/* Diagram */}
-      <div className="relative">
-        {/* Grid background */}
-        <div className="absolute inset-0 opacity-5 dark:opacity-10" style={{
-          backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
-          backgroundSize: '20px 20px',
-        }} />
+      <div className="flex flex-col gap-2">
+        {hldNodes.map((node, i) => {
+          const Icon = node.icon;
+          const isOpen = expanded === node.id;
 
-        <div className="relative flex flex-col gap-3">
-          {hldNodes.map((node, i) => {
-            const Icon = node.icon;
-            const isExpanded = expanded === node.id;
-
-            return (
-              <div key={node.id}>
-                <button
-                  onClick={() => setExpanded(isExpanded ? null : node.id)}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl border border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600 transition-all bg-surface-50 dark:bg-surface-750 group"
+          return (
+            <div key={node.id}>
+              <button
+                onClick={() => setExpanded(isOpen ? null : node.id)}
+                className="w-full flex items-center gap-4 p-4 rounded-xl border border-surface-200 dark:border-surface-600 hover:border-surface-300 dark:hover:border-surface-500 transition-all bg-surface-50 dark:bg-surface-700 group"
+              >
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: `${node.color}20`, border: `1.5px solid ${node.color}50` }}
                 >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0"
-                    style={{ backgroundColor: `${node.color}18`, border: `1.5px solid ${node.color}40` }}
-                  >
-                    <Icon size={22} style={{ color: node.color }} />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-bold text-surface-900 dark:text-white">{node.label}</p>
-                    <p className="text-xs text-surface-500">{node.items.length} components</p>
-                  </div>
-                  {isExpanded ? (
-                    <ChevronUp size={18} className="text-surface-400" />
-                  ) : (
-                    <ChevronDown size={18} className="text-surface-400" />
-                  )}
-                </button>
-
-                {/* Expanded content */}
-                {isExpanded && (
-                  <div className="mt-2 ml-8 p-4 rounded-xl bg-surface-50 dark:bg-surface-750 border border-dashed border-surface-200 dark:border-surface-600 animate-slide-up">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {node.items.map((item, j) => (
-                        <div
-                          key={j}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-surface-800 border border-surface-100 dark:border-surface-700 text-sm"
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: node.color }} />
-                          <code className="text-xs font-mono text-surface-700 dark:text-surface-300">{item}</code>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <Icon size={20} style={{ color: node.color }} />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-semibold text-surface-900 dark:text-white">{node.label}</p>
+                  <p className="text-xs text-surface-500 dark:text-surface-400">{node.items.length} parts</p>
+                </div>
+                {isOpen ? (
+                  <ChevronUp size={16} className="text-surface-400" />
+                ) : (
+                  <ChevronDown size={16} className="text-surface-400" />
                 )}
+              </button>
 
-                {/* Connector arrow */}
-                {i < hldNodes.length - 1 && (
-                  <div className="flex justify-center py-1">
-                    <div className="w-px h-4 bg-surface-300 dark:bg-surface-600" />
-                    <ArrowRight size={12} className="text-surface-400 -ml-1.5 mt-1 rotate-90" />
+              {isOpen && (
+                <div className="mt-2 ml-8 p-3 rounded-xl bg-surface-100 dark:bg-surface-700 border border-dashed border-surface-300 dark:border-surface-600 animate-slide-up">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {node.items.map((item, j) => (
+                      <div
+                        key={j}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-600"
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: node.color }} />
+                        <span className="text-xs text-surface-700 dark:text-surface-300">{item}</span>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                </div>
+              )}
+
+              {i < hldNodes.length - 1 && (
+                <div className="flex justify-center py-1">
+                  <ArrowRight size={12} className="text-surface-400 rotate-90" />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-// ─── Section 2: LLD Data Structure ───────────────────────────
+// ─── Section 2: Data Structure ───────────────────────────────
 
 function LldCard() {
   const { transactions } = useApp();
@@ -152,7 +125,6 @@ function LldCard() {
 
   const handleBenchmark = () => {
     setBenchRunning(true);
-    // Use setTimeout to let the UI update before blocking
     setTimeout(() => {
       const idx = buildIndex(transactions);
       const result = runBenchmark(idx, 'Food');
@@ -162,78 +134,73 @@ function LldCard() {
   };
 
   const structures = [
-    { key: 'byId', type: 'HashMap<id, Tx>', complexity: 'O(1)', desc: 'Instant ID lookup', color: '#818CF8' },
-    { key: 'byCategory', type: 'Index<cat, Tx[]>', complexity: 'O(1)', desc: 'Category filter', color: '#34D399' },
-    { key: 'byType', type: 'Index<type, Tx[]>', complexity: 'O(1)', desc: 'Income/expense split', color: '#F59E0B' },
-    { key: 'byDate', type: 'Sorted Array', complexity: 'O(log n)', desc: 'Date range queries', color: '#EC4899' },
-    { key: 'sortedByAmount', type: 'Sorted Array', complexity: 'O(1)*', desc: 'Pre-computed sort', color: '#06B6D4' },
+    { key: 'byId', desc: 'Find any transaction instantly', speed: 'Fast', color: '#818CF8' },
+    { key: 'byCategory', desc: 'Group by Food, Shopping, etc.', speed: 'Fast', color: '#34D399' },
+    { key: 'byType', desc: 'Split income vs expenses', speed: 'Fast', color: '#F59E0B' },
+    { key: 'byDate', desc: 'Filter by date range', speed: 'Fast', color: '#EC4899' },
+    { key: 'sorted', desc: 'Already sorted, no re-sorting', speed: 'Instant', color: '#06B6D4' },
   ];
 
   return (
     <div className="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700 shadow-sm">
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5">
         <div className="w-10 h-10 rounded-xl bg-warning-50 dark:bg-warning-500/15 flex items-center justify-center">
           <Database size={20} className="text-warning-500" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-surface-900 dark:text-white">TransactionStore (LLD)</h3>
-          <p className="text-sm text-surface-500">Indexed data structure for O(1) operations</p>
+          <h3 className="text-lg font-bold text-surface-900 dark:text-white">Data Organization</h3>
+          <p className="text-sm text-surface-500 dark:text-surface-400">How transactions are stored for fast access</p>
         </div>
       </div>
 
-      {/* Structure visualization */}
-      <div className="space-y-2 mb-6">
+      <div className="space-y-2 mb-5">
         {structures.map((s) => (
           <div
             key={s.key}
-            className="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-750 border border-surface-100 dark:border-surface-700"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-700 border border-surface-100 dark:border-surface-600"
           >
-            <code className="text-sm font-mono font-bold text-surface-800 dark:text-surface-200 w-40 flex-shrink-0">
-              {s.key}
-            </code>
-            <ArrowRight size={14} className="text-surface-400 flex-shrink-0" />
-            <code className="text-xs font-mono text-surface-500 w-36 flex-shrink-0">{s.type}</code>
+            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+            <span className="text-sm font-semibold text-surface-800 dark:text-surface-200 w-28 flex-shrink-0">{s.key}</span>
+            <span className="text-xs text-surface-500 dark:text-surface-400 flex-1">{s.desc}</span>
             <span
-              className="px-2 py-0.5 rounded-md text-xs font-bold flex-shrink-0"
+              className="px-2 py-0.5 rounded-md text-[11px] font-bold flex-shrink-0"
               style={{ backgroundColor: `${s.color}20`, color: s.color }}
             >
-              {s.complexity}
+              {s.speed}
             </span>
-            <span className="text-xs text-surface-500 hidden sm:block">{s.desc}</span>
           </div>
         ))}
       </div>
 
-      {/* Live Benchmark */}
-      <div className="p-4 rounded-xl bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-750 dark:to-surface-800 border border-surface-200 dark:border-surface-700">
-        <div className="flex items-center justify-between mb-4">
+      {/* Benchmark */}
+      <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-700 border border-surface-200 dark:border-surface-600">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Zap size={16} className="text-warning-500" />
-            <span className="text-sm font-bold text-surface-900 dark:text-white">Live Benchmark</span>
-            <span className="text-xs text-surface-500">(10,000 iterations × "Food" filter)</span>
+            <span className="text-sm font-bold text-surface-900 dark:text-white">Speed Test</span>
           </div>
           <button
             onClick={handleBenchmark}
             disabled={benchRunning}
-            className="px-4 py-2 rounded-lg bg-primary-500 text-white text-xs font-bold hover:bg-primary-600 disabled:opacity-50 transition-all shadow-sm"
+            className="px-4 py-2 rounded-lg bg-primary-500 text-white text-xs font-bold hover:bg-primary-600 disabled:opacity-50 transition-all"
           >
-            {benchRunning ? '⏳ Running...' : '▶ Run Benchmark'}
+            {benchRunning ? '⏳ Running...' : '▶ Run Test'}
           </button>
         </div>
 
         {benchResult && (
           <div className="grid grid-cols-3 gap-3 animate-slide-up">
             <div className="p-3 rounded-lg bg-danger-50 dark:bg-danger-500/10 border border-danger-200 dark:border-danger-500/20 text-center">
-              <p className="text-xs text-danger-600 dark:text-danger-400 font-semibold mb-1">Naive O(n)</p>
-              <p className="text-xl font-bold text-danger-700 dark:text-danger-400">{benchResult.naiveMs}ms</p>
+              <p className="text-[11px] text-danger-600 dark:text-danger-400 font-semibold mb-1">Slow Way</p>
+              <p className="text-lg font-bold text-danger-700 dark:text-danger-400">{benchResult.naiveMs}ms</p>
             </div>
             <div className="p-3 rounded-lg bg-success-50 dark:bg-success-500/10 border border-success-200 dark:border-success-500/20 text-center">
-              <p className="text-xs text-success-600 dark:text-success-400 font-semibold mb-1">Indexed O(1)</p>
-              <p className="text-xl font-bold text-success-700 dark:text-success-400">{benchResult.indexedMs}ms</p>
+              <p className="text-[11px] text-success-600 dark:text-success-400 font-semibold mb-1">Our Way</p>
+              <p className="text-lg font-bold text-success-700 dark:text-success-400">{benchResult.indexedMs}ms</p>
             </div>
             <div className="p-3 rounded-lg bg-primary-50 dark:bg-primary-500/10 border border-primary-200 dark:border-primary-500/20 text-center">
-              <p className="text-xs text-primary-600 dark:text-primary-400 font-semibold mb-1">Speedup</p>
-              <p className="text-xl font-bold text-primary-700 dark:text-primary-400">{benchResult.speedup} faster</p>
+              <p className="text-[11px] text-primary-600 dark:text-primary-400 font-semibold mb-1">Result</p>
+              <p className="text-lg font-bold text-primary-700 dark:text-primary-400">{benchResult.speedup} faster</p>
             </div>
           </div>
         )}
@@ -242,63 +209,54 @@ function LldCard() {
   );
 }
 
-// ─── Section 3: Optimization Table ────────────────────────────
+// ─── Section 3: What We Optimized ─────────────────────────────
 
 function OptimizationTable() {
   const rows = [
-    { feature: 'Search', naive: 'Loop all records O(n)', ours: 'Debounce 300ms + Index', why: 'Avoid re-renders on every keystroke', naiveO: 'O(n)', ourO: 'O(1)' },
-    { feature: 'Filter', naive: 'Filter on every render', ours: 'Pre-built HashMap index', why: 'O(1) category/type lookups vs O(n) scan', naiveO: 'O(n)', ourO: 'O(1)' },
-    { feature: 'Sort', naive: 'Sort on column click', ours: 'Cached sorted views', why: 'Pre-sorted arrays avoid re-sorting', naiveO: 'O(n log n)', ourO: 'O(1)*' },
-    { feature: 'Render', naive: 'Render all rows in DOM', ours: 'Virtual scrolling (react-window)', why: 'Only 20 visible rows → handles 1M records', naiveO: 'O(n)', ourO: 'O(1)' },
-    { feature: 'Aggregation', naive: 'Recalculate on every render', ours: 'useMemo + Web Worker', why: 'Memoized results, 60fps always', naiveO: 'O(n)', ourO: 'O(1)*' },
-    { feature: 'Page Load', naive: 'Bundle everything', ours: 'React.lazy + Suspense', why: 'Code-split: load pages on demand', naiveO: 'Full', ourO: 'Partial' },
+    { feature: 'Search', basic: 'Check every record', ours: 'Wait 300ms, then search' },
+    { feature: 'Filter', basic: 'Loop through all data', ours: 'Pre-grouped by category' },
+    { feature: 'Sort', basic: 'Re-sort every time', ours: 'Already sorted on load' },
+    { feature: 'Render', basic: 'Show all rows at once', ours: 'Only show visible rows' },
+    { feature: 'Charts', basic: 'Recalculate always', ours: 'Cache results with useMemo' },
+    { feature: 'Pages', basic: 'Load everything upfront', ours: 'Load pages when visited' },
   ];
 
   return (
     <div className="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700 shadow-sm">
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5">
         <div className="w-10 h-10 rounded-xl bg-success-50 dark:bg-success-500/15 flex items-center justify-center">
           <Gauge size={20} className="text-success-500" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-surface-900 dark:text-white">Optimization Decisions</h3>
-          <p className="text-sm text-surface-500">Naive approach vs. our engineered approach</p>
+          <h3 className="text-lg font-bold text-surface-900 dark:text-white">What We Optimized</h3>
+          <p className="text-sm text-surface-500 dark:text-surface-400">Basic approach vs our approach</p>
         </div>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-surface-200 dark:border-surface-700">
-              <th className="text-left py-3 px-3 text-xs font-semibold text-surface-500 uppercase tracking-wider w-24">Feature</th>
-              <th className="text-left py-3 px-3 text-xs font-semibold text-danger-500 uppercase tracking-wider">❌ Naive Way</th>
+            <tr className="border-b border-surface-200 dark:border-surface-600">
+              <th className="text-left py-3 px-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Feature</th>
+              <th className="text-left py-3 px-3 text-xs font-semibold text-danger-500 uppercase tracking-wider">❌ Basic</th>
               <th className="text-left py-3 px-3 text-xs font-semibold text-success-500 uppercase tracking-wider">✅ Our Way</th>
-              <th className="text-left py-3 px-3 text-xs font-semibold text-surface-500 uppercase tracking-wider hidden lg:table-cell">Why</th>
-              <th className="text-center py-3 px-3 text-xs font-semibold text-surface-500 uppercase tracking-wider w-20">Big-O</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-surface-100 dark:divide-surface-700">
+          <tbody className="divide-y divide-surface-100 dark:divide-surface-600">
             {rows.map((row) => (
-              <tr key={row.feature} className="hover:bg-surface-50 dark:hover:bg-surface-700/30 transition-colors">
+              <tr key={row.feature} className="hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors">
                 <td className="py-3 px-3">
-                  <span className="font-bold text-surface-800 dark:text-surface-200">{row.feature}</span>
+                  <span className="font-semibold text-surface-800 dark:text-surface-200">{row.feature}</span>
                 </td>
                 <td className="py-3 px-3">
-                  <code className="text-xs font-mono text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-500/10 px-2 py-1 rounded">
-                    {row.naive}
-                  </code>
+                  <span className="text-xs text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-500/10 px-2 py-1 rounded-lg">
+                    {row.basic}
+                  </span>
                 </td>
                 <td className="py-3 px-3">
-                  <code className="text-xs font-mono text-success-600 dark:text-success-400 bg-success-50 dark:bg-success-500/10 px-2 py-1 rounded">
+                  <span className="text-xs text-success-600 dark:text-success-400 bg-success-50 dark:bg-success-500/10 px-2 py-1 rounded-lg">
                     {row.ours}
-                  </code>
-                </td>
-                <td className="py-3 px-3 text-xs text-surface-500 hidden lg:table-cell">{row.why}</td>
-                <td className="py-3 px-3 text-center">
-                  <div className="flex flex-col items-center gap-0.5">
-                    <span className="text-[10px] text-danger-500 line-through">{row.naiveO}</span>
-                    <span className="text-xs font-bold text-success-600">{row.ourO}</span>
-                  </div>
+                  </span>
                 </td>
               </tr>
             ))}
@@ -309,68 +267,66 @@ function OptimizationTable() {
   );
 }
 
-// ─── Section 4: Scaling Roadmap ────────────────────────────────
+// ─── Section 4: Future Plans ───────────────────────────────────
 
 function ScalingRoadmap() {
   const phases = [
     {
-      phase: 'Phase 1 — Current',
+      phase: 'Now',
       label: 'Mock Data',
       icon: Code2,
       color: '#818CF8',
-      desc: '30 transactions, localStorage cache, indexed data engine, Context API state',
+      desc: '30 transactions stored locally in the browser',
       status: 'active' as const,
     },
     {
-      phase: 'Phase 2',
-      label: 'REST API',
+      phase: 'Next',
+      label: 'Real Backend',
       icon: Server,
       color: '#34D399',
-      desc: 'Express/FastAPI backend, PostgreSQL, server-side pagination, JWT auth',
+      desc: 'Connect to a REST API with a database',
       status: 'planned' as const,
     },
     {
-      phase: 'Phase 3',
-      label: 'GraphQL + Scale',
+      phase: 'Future',
+      label: 'Live Updates',
       icon: Globe,
       color: '#F59E0B',
-      desc: 'GraphQL subscriptions for live data, Redis caching, WebSocket updates',
+      desc: 'Real-time data with WebSocket connections',
       status: 'future' as const,
     },
     {
-      phase: 'Phase 4',
-      label: '1M Users',
+      phase: 'Goal',
+      label: 'Full Scale',
       icon: Users,
       color: '#EC4899',
-      desc: 'CDN distribution, database indexing, message queues, horizontal scaling',
+      desc: 'Handle thousands of users and millions of records',
       status: 'future' as const,
     },
   ];
 
   return (
     <div className="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700 shadow-sm">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-500/15 flex items-center justify-center">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
           <BarChart3 size={20} className="text-primary-500" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-surface-900 dark:text-white">Scaling Roadmap</h3>
-          <p className="text-sm text-surface-500">From prototype to production at scale</p>
+          <h3 className="text-lg font-bold text-surface-900 dark:text-white">Future Plans</h3>
+          <p className="text-sm text-surface-500 dark:text-surface-400">How this app could grow</p>
         </div>
       </div>
 
       <div className="relative">
-        {/* Timeline line */}
-        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-surface-200 dark:bg-surface-700" />
+        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-surface-200 dark:bg-surface-600" />
 
-        <div className="space-y-6">
+        <div className="space-y-5">
           {phases.map((p) => {
             const Icon = p.icon;
             return (
               <div key={p.phase} className="relative flex gap-5 pl-1">
-                {/* Timeline dot */}
                 <div
-                  className="relative z-10 w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm"
+                  className="relative z-10 w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{
                     backgroundColor: p.status === 'active' ? p.color : `${p.color}20`,
                     border: `2px solid ${p.color}`,
@@ -378,20 +334,17 @@ function ScalingRoadmap() {
                 >
                   <Icon size={18} style={{ color: p.status === 'active' ? '#fff' : p.color }} />
                 </div>
-
-                <div className="flex-1 pb-2">
-                  <div className="flex items-center gap-3 mb-1">
-                    <h4 className="font-bold text-surface-900 dark:text-white">{p.label}</h4>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-surface-500">
-                      {p.phase}
-                    </span>
+                <div className="flex-1 pb-1">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h4 className="font-semibold text-surface-900 dark:text-white">{p.label}</h4>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400">{p.phase}</span>
                     {p.status === 'active' && (
                       <span className="px-2 py-0.5 rounded-full bg-success-100 dark:bg-success-500/15 text-success-700 dark:text-success-400 text-[10px] font-bold">
                         CURRENT
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-surface-500">{p.desc}</p>
+                  <p className="text-sm text-surface-500 dark:text-surface-400">{p.desc}</p>
                 </div>
               </div>
             );
@@ -415,43 +368,41 @@ export default function ArchitecturePage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Architecture</h1>
-            <p className="text-sm text-surface-500">
-              Designed to scale from 30 to 1,000,000 transactions with zero UI changes
+            <p className="text-sm text-surface-500 dark:text-surface-400">
+              How this dashboard is built and organized
             </p>
           </div>
         </div>
-        <div className="mt-4 p-4 rounded-xl bg-primary-50 dark:bg-primary-500/10 border border-primary-200 dark:border-primary-500/20">
+        <div className="mt-3 p-3 rounded-xl bg-primary-50 dark:bg-primary-500/10 border border-primary-200 dark:border-primary-500/20">
           <p className="text-sm text-primary-700 dark:text-primary-300">
-            <strong>💡 Why this page exists:</strong> This demonstrates the architectural thinking behind Finsight.
-            Every data operation is O(1) or O(log n) via pre-built indexes — not naive O(n) iteration.
-            The UI is engineered for 60fps at any data scale.
+            💡 This page shows how the app is structured — the components, data flow, and optimizations used to keep it fast and organized.
           </p>
         </div>
       </div>
 
-      {/* HLD Diagram */}
+      {/* HLD */}
       <HldDiagram />
 
-      {/* LLD + Optimizations side by side on large screens */}
+      {/* Data + Optimizations */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <LldCard />
         <OptimizationTable />
       </div>
 
-      {/* Scaling Roadmap */}
+      {/* Roadmap */}
       <ScalingRoadmap />
 
-      {/* Tech Stack Summary */}
-      <div className="bg-gradient-to-br from-surface-800 to-surface-900 dark:from-surface-900 dark:to-surface-950 rounded-2xl p-6 text-white shadow-lg">
-        <h3 className="text-lg font-bold mb-4">⚡ Performance Stack</h3>
+      {/* Tech Stack */}
+      <div className="bg-gradient-to-br from-surface-800 to-surface-900 dark:from-surface-800 dark:to-surface-950 rounded-2xl p-6 text-white shadow-lg">
+        <h3 className="text-lg font-bold mb-4">⚡ Tech Stack</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
           {[
-            { label: 'React 19', detail: 'Concurrent features' },
+            { label: 'React 19', detail: 'UI framework' },
             { label: 'TypeScript', detail: 'Type safety' },
-            { label: 'Tailwind v4', detail: 'Utility CSS' },
-            { label: 'Recharts', detail: 'Visualizations' },
+            { label: 'Tailwind v4', detail: 'Styling' },
+            { label: 'Recharts', detail: 'Charts' },
             { label: 'react-window', detail: 'Virtual scroll' },
-            { label: 'Context API', detail: 'State mgmt' },
+            { label: 'Context API', detail: 'State' },
           ].map((tech) => (
             <div key={tech.label} className="p-3 rounded-xl bg-white/5 border border-white/10 text-center">
               <p className="text-sm font-bold">{tech.label}</p>

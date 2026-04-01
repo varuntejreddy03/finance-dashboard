@@ -7,9 +7,11 @@ interface AppState {
   role: Role;
   transactions: Transaction[];
   filters: FilterState;
+  sidebarCollapsed: boolean;
   setTheme: (t: ThemeMode) => void;
   toggleTheme: () => void;
   setRole: (r: Role) => void;
+  setSidebarCollapsed: (v: boolean) => void;
   setTransactions: (t: Transaction[]) => void;
   addTransaction: (t: Transaction) => void;
   updateTransaction: (id: string, t: Partial<Transaction>) => void;
@@ -46,6 +48,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     loadFromStorage('fd-transactions', mockTransactions)
   );
   const [filters, setFiltersState] = useState<FilterState>(defaultFilters);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Sync theme to DOM
   useEffect(() => {
@@ -81,9 +84,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         role,
         transactions,
         filters,
+        sidebarCollapsed,
         setTheme,
         toggleTheme,
         setRole,
+        setSidebarCollapsed,
         setTransactions,
         addTransaction,
         updateTransaction,

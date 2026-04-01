@@ -26,10 +26,9 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const { theme, toggleTheme, role, setRole } = useApp();
+  const { theme, toggleTheme, role, setRole, sidebarCollapsed: collapsed, setSidebarCollapsed: setCollapsed } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [roleDropdown, setRoleDropdown] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
   const [hovered, setHovered] = useState(false);
   const location = useLocation();
 
