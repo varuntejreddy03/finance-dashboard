@@ -164,7 +164,7 @@ export default function InsightsPage() {
                       boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
                     }}
                     itemStyle={{ color: '#fff', fontSize: 13 }}
-                    formatter={(value: number) => [`$${value.toLocaleString()}`, 'Spent']}
+                    formatter={(value: any) => [`$${Number(value).toLocaleString()}`, 'Spent']}
                   />
                   <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={22}>
                     {categoryData.map((entry) => (
