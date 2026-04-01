@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useDebounce } from '../hooks/useDebounce';
 import {
   Search,
   Plus,
@@ -10,6 +11,7 @@ import {
   Download,
   SlidersHorizontal,
   X,
+  Loader2,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useFilteredTransactions } from '../hooks/useFinance';
@@ -22,6 +24,15 @@ export default function TransactionsPage() {
   const filtered = useFilteredTransactions();
   const [modalOpen, setModalOpen] = useState(false);
   const [editTx, setEditTx] = useState<Transaction | null>(null);
+  const [localSearch, setLocalSearch] = useState(filters.search);
+  const debouncedSearch = useDebounce(localSearch, 300);
+  const isSearching = localSearch !== debouncedSearch;
+
+  // Sync debounced search to global filters
+  useEffect(() => {
+    setFilters({ search: debouncedSearch });
+  }, [debouncedSearch]);
+
   const [showFilters, setShowFilters] = useState(false);
 
   const isAdmin = role === 'admin';
@@ -90,12 +101,15 @@ export default function TransactionsPage() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+            {isSearching && (
+              <Loader2 size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-500 animate-spin" />
+            )}
             <input
               type="text"
-              placeholder="Search transactions..."
-              value={filters.search}
-              onChange={(e) => setFilters({ search: e.target.value })}
-              className="w-full pl-11 pr-4 py-3 rounded-xl border border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              placeholder="Search transactions... (debounced 300ms)"
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+              className="w-full pl-11 pr-10 py-3 rounded-xl border border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
             />
           </div>
           <button
