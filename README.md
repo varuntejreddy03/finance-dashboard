@@ -44,11 +44,11 @@ npm run dev
 - Horizontal bar chart by category
 - Smart tips with personalized recommendations
 
-### 🏗️ Architecture Page (The Secret Weapon)
-- **Interactive HLD diagram** — clickable layers showing internal components
-- **LLD Data Structure card** — TransactionStore with live benchmark
-- **Optimization decisions table** — Naive vs Engineered with Big-O
-- **Scaling Roadmap** — Mock → REST → GraphQL → 1M users timeline
+### 🏢 Architecture Page (The Secret Weapon)
+- **Interactive HLD Diagram** — Simple, clickable blocks showing how the app is structured.
+- **Data Organization (LLD)** — Visual view of the indexed store + **Live Test Button** (runs a speed test comparing old vs new ways).
+- **Optimization Table** — Quick table showing "Basic" vs "Our Way" for performance.
+- **Future Roadmap** — Clear steps for how the app grows from 30 to 1 million users.
 
 ### 🛡️ Role-Based UI (RBAC)
 - **Admin**: Full CRUD — add, edit, delete transactions
