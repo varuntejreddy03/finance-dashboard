@@ -60,7 +60,7 @@ export default function SpendingBreakdownChart() {
                   boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
                 }}
                 itemStyle={{ color: '#fff', fontSize: 13 }}
-                formatter={(value: number) => `$${value.toLocaleString()}`}
+                formatter={(value: any) => `$${Number(value).toLocaleString()}`}
               />
             </PieChart>
           </ResponsiveContainer>

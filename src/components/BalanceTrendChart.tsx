@@ -67,7 +67,7 @@ export default function BalanceTrendChart() {
               }}
               labelStyle={{ color: '#94A3B8', fontSize: 12, marginBottom: 4 }}
               itemStyle={{ color: '#fff', fontSize: 14, fontWeight: 600 }}
-              formatter={(value: number) => [`$${value.toLocaleString()}`, 'Balance']}
+              formatter={(value: any) => [`$${Number(value).toLocaleString()}`, 'Balance']}
             />
             <Area
               type="monotone"
